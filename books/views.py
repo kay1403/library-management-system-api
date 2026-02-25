@@ -5,38 +5,24 @@ from rest_framework.views import APIView
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 
-from .models import Book, Loan
-from .serializers import BookSerializer, LoanSerializer, CheckoutSerializer, ReturnSerializer
+from .models import Book, Transaction
+from .serializers import BookSerializer, TransactionSerializer, CheckoutSerializer, ReturnSerializer
 from django.contrib.auth import get_user_model
 from django.db import transaction
 
 User = get_user_model()
 
-# --------------------------
-# BOOK VIEWSET
-# --------------------------
+
 class BookViewSet(viewsets.ModelViewSet):
-    """
-    Book CRUD API with:
-    - Admin-only create/update/delete
-    - Filtering by author, ISBN
-    - Search by title, author, ISBN
-    - Pagination
-    - Filter only available books
-    - Ordering
-    """
     serializer_class = BookSerializer
     queryset = Book.objects.all()
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['author', 'isbn']           # exact matches
-    search_fields = ['title', 'author', 'isbn']    # partial search
-    ordering_fields = ['title', 'published_date']  # allow ordering
-    ordering = ['title']                            # default ordering
+    filterset_fields = ['author', 'isbn']
+    search_fields = ['title', 'author', 'isbn']
+    ordering_fields = ['title', 'published_date']
+    ordering = ['title']
 
     def get_queryset(self):
-        """
-        Optionally filter by availability (?available=true)
-        """
         queryset = super().get_queryset()
         available = self.request.query_params.get('available')
         if available and available.lower() == 'true':
@@ -44,53 +30,42 @@ class BookViewSet(viewsets.ModelViewSet):
         return queryset
 
     def get_permissions(self):
-        """
-        Admin-only for create/update/delete, read-only for everyone else
-        """
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsAdminUser()]
         return [IsAuthenticated()]
 
 
-
-
-# --------------------------
-# Checkout Endpoint
-# --------------------------
 class CheckoutView(APIView):
     permission_classes = [IsAuthenticated]
-    MAX_ACTIVE_LOANS = 5
+    MAX_ACTIVE_TRANSACTIONS = 5
 
     def post(self, request):
         serializer = CheckoutSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         book_id = serializer.validated_data['book_id']
 
-        # 🚨 Check loan limit before doing anything
-        active_loans_count = Loan.objects.filter(
+        active_count = Transaction.objects.filter(
             user=request.user,
             return_date__isnull=True
         ).count()
-        if active_loans_count >= self.MAX_ACTIVE_LOANS:
+
+        if active_count >= self.MAX_ACTIVE_TRANSACTIONS:
             return Response(
-                {'error': f'Loan limit reached (max {self.MAX_ACTIVE_LOANS} active loans).'},
+                {'error': f'Transaction limit reached (max {self.MAX_ACTIVE_TRANSACTIONS} active).'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         try:
             with transaction.atomic():
-                # 🔒 Lock the book row for update
                 book = Book.objects.select_for_update().get(id=book_id)
 
-                # Check available copies
                 if book.copies_available <= 0:
                     return Response(
                         {'error': 'No copies available'},
                         status=status.HTTP_400_BAD_REQUEST
                     )
 
-                # Check duplicate active loan
-                if Loan.objects.filter(
+                if Transaction.objects.filter(
                     user=request.user,
                     book=book,
                     return_date__isnull=True
@@ -100,8 +75,7 @@ class CheckoutView(APIView):
                         status=status.HTTP_400_BAD_REQUEST
                     )
 
-                # Create loan
-                Loan.objects.create(user=request.user, book=book)
+                Transaction.objects.create(user=request.user, book=book)
                 book.copies_available -= 1
                 book.save()
 
@@ -116,55 +90,44 @@ class CheckoutView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-# --------------------------
-# My Loans Endpoint
-# --------------------------
-class MyLoansView(generics.ListAPIView):
-    serializer_class = LoanSerializer
+
+class MyTransactionsView(generics.ListAPIView):
+    serializer_class = TransactionSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """
-        Return all loans of the user, optionally filter only active loans with ?active=true
-        """
-        queryset = Loan.objects.filter(user=self.request.user)
+        queryset = Transaction.objects.filter(user=self.request.user)
         active = self.request.query_params.get('active', None)
         if active and active.lower() == 'true':
             queryset = queryset.filter(return_date__isnull=True)
         return queryset.order_by('-checkout_date')
 
-# --------------------------
-# Return Endpoint
-# --------------------------
+
 class ReturnView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, loan_id):
+    def post(self, request, transaction_id):
         try:
             with transaction.atomic():
-
-                # 🔒 Lock loan row
-                loan = Loan.objects.select_for_update().get(
-                    id=loan_id,
+                transaction_obj = Transaction.objects.select_for_update().get(
+                    id=transaction_id,
                     user=request.user,
                     return_date__isnull=True
                 )
 
-                # Update return date
-                loan.return_date = timezone.now()
-                loan.save()
+                transaction_obj.return_date = timezone.now()
+                transaction_obj.save()
 
-                # Increase book stock
-                loan.book.copies_available += 1
-                loan.book.save()
+                transaction_obj.book.copies_available += 1
+                transaction_obj.book.save()
 
             return Response(
                 {"success": "Book returned successfully"},
                 status=status.HTTP_200_OK
             )
 
-        except Loan.DoesNotExist:
+        except Transaction.DoesNotExist:
             return Response(
-                {"error": "Active loan not found"},
+                {"error": "Active transaction not found"},
                 status=status.HTTP_404_NOT_FOUND
             )

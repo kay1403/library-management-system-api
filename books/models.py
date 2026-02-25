@@ -2,7 +2,6 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from django.db.models import Q
-from django.conf import settings
 from django.core.exceptions import ValidationError
 
 
@@ -17,9 +16,6 @@ class Book(models.Model):
         return self.title
 
     def clean(self):
-        """
-        Business validations
-        """
         if self.copies_available < 0:
             raise ValidationError("Copies available cannot be negative.")
 
@@ -33,8 +29,7 @@ class Book(models.Model):
         ]
 
 
-
-class Loan(models.Model):
+class Transaction(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     book = models.ForeignKey('Book', on_delete=models.CASCADE)
     checkout_date = models.DateTimeField(auto_now_add=True)
@@ -48,6 +43,6 @@ class Loan(models.Model):
             models.UniqueConstraint(
                 fields=['user', 'book'],
                 condition=Q(return_date__isnull=True),
-                name='unique_active_loan'
+                name='unique_active_transaction'
             )
         ]
