@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+env/
+venv/
+
+# Database
+db.sqlite3
+
+# Environment variables
+.env
+
+# VSCode
+.vscode/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Migrations (optionnel selon stratégie)
+**/migrations/__pycache__/
+
+# Static files (si collectstatic utilisé)
+staticfiles/
+

@@ -18,10 +18,15 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     User CRUD API
     - Admin can list, update, delete users
-    - Users can update their own data
+    - Users can retrieve/update their own data
     """
     serializer_class = UserSerializer
-    queryset = User.objects.all()
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff:
+            return User.objects.all()
+        return User.objects.filter(id=user.id)
 
     def get_permissions(self):
         if self.action in ['list', 'destroy']:
