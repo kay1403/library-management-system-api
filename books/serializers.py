@@ -22,13 +22,18 @@ class BookSerializer(serializers.ModelSerializer):
 class TransactionSerializer(serializers.ModelSerializer):
     book = BookSerializer(read_only=True)
     status = serializers.SerializerMethodField()
+    due_date = serializers.DateTimeField(read_only=True) 
 
     class Meta:
         model = Transaction
-        fields = ['id', 'book', 'checkout_date', 'return_date', 'status']
+        fields = ['id', 'book', 'checkout_date', 'return_date', 'due_date', 'status']
 
     def get_status(self, obj):
-        return "returned" if obj.return_date else "active"
+        if obj.return_date:
+            return "returned"
+        elif obj.due_date and obj.due_date < timezone.now():
+            return "overdue"
+        return "active"
 
 
 class CheckoutSerializer(serializers.Serializer):

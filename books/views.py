@@ -4,11 +4,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
-
 from .models import Book, Transaction
 from .serializers import BookSerializer, TransactionSerializer, CheckoutSerializer, ReturnSerializer
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.core.mail import send_mail
+from .models import Waitlist
+
 
 User = get_user_model()
 
@@ -131,3 +133,43 @@ class ReturnView(APIView):
                 {"error": "Active transaction not found"},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+        if transaction_obj.book.copies_available > 0:
+            waitlist_entries = Waitlist.objects.filter(book=transaction_obj.book).order_by('created_at')
+            if waitlist_entries.exists():
+                next_user = waitlist_entries.first().user
+                send_mail(
+                    subject=f'Book Available: {transaction_obj.book.title}',
+                    message=f'Dear {next_user.username},\n\nThe book "{transaction_obj.book.title}" is now available for checkout.',
+                    from_email=None,
+                    recipient_list=[next_user.email],
+                    fail_silently=False,
+                )
+
+                waitlist_entries.first().delete()
+
+
+class JoinWaitlistView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        book_id = request.data.get('book_id')
+        book = Book.objects.get(id=book_id)
+
+        from .models import Waitlist
+        if Waitlist.objects.filter(user=request.user, book=book).exists():
+            return Response({'error': 'You are already on the waitlist'}, status=400)
+
+        Waitlist.objects.create(user=request.user, book=book)
+        return Response({'success': 'Added to waitlist'}, status=200)
+
+class OverdueTransactionsView(generics.ListAPIView):
+    serializer_class = TransactionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Transaction.objects.filter(
+            user=self.request.user,
+            return_date__isnull=True,
+            due_date__lt=timezone.now()
+        ).order_by('due_date')

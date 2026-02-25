@@ -3,6 +3,8 @@ from django.conf import settings
 from django.utils import timezone
 from django.db.models import Q
 from django.core.exceptions import ValidationError
+from datetime import timedelta
+
 
 
 class Book(models.Model):
@@ -34,9 +36,20 @@ class Transaction(models.Model):
     book = models.ForeignKey('Book', on_delete=models.CASCADE)
     checkout_date = models.DateTimeField(auto_now_add=True)
     return_date = models.DateTimeField(null=True, blank=True)
+    due_date = models.DateTimeField(null=True, blank=True)  
 
     def __str__(self):
         return f"{self.user} - {self.book}"
+
+
+    def save(self, *args, **kwargs):
+        if not self.checkout_date:
+            self.checkout_date = timezone.now()
+
+        if not self.due_date and not self.return_date:
+            self.due_date = self.checkout_date + timedelta(days=14)
+
+        super().save(*args, **kwargs)
 
     class Meta:
         constraints = [
@@ -46,3 +59,9 @@ class Transaction(models.Model):
                 name='unique_active_transaction'
             )
         ]
+
+
+class Waitlist(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    book = models.ForeignKey('Book', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
