@@ -13,19 +13,20 @@ class BookSerializer(serializers.ModelSerializer):
 # Loan Serializer
 class LoanSerializer(serializers.ModelSerializer):
     book = BookSerializer(read_only=True)
+    status = serializers.SerializerMethodField()
 
     class Meta:
         model = Loan
-        fields = ['id', 'book', 'checkout_date', 'return_date']
+        fields = ['id', 'book', 'checkout_date', 'return_date', 'status']
 
-# Checkout Serializer (input only book_id)
+    def get_status(self, obj):
+        return "returned" if obj.return_date else "active"
+
 class CheckoutSerializer(serializers.Serializer):
     book_id = serializers.IntegerField()
 
-# Return Serializer (input only book_id)
 class ReturnSerializer(serializers.Serializer):
     book_id = serializers.IntegerField()
-
 # User Serializer
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
