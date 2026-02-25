@@ -31,22 +31,21 @@ class BookTests(TestCase):
         self.book.refresh_from_db()
         self.assertEqual(self.book.copies_available, 1)
 
-    import uuid
 
-def test_checkout_book_limit(self):
-    self.client.force_authenticate(user=self.user)
-    
-    for i in range(5):
-        b = Book.objects.create(
-            title=f"Book{i+2}",
-            author=f"Author{i+2}",
-            isbn=str(uuid.uuid4()), 
-            published_date="2020-01-01",
-            copies_available=2
-        )
-        Transaction.objects.create(user=self.user, book=b)
-    
-    res = self.client.post('/api/checkout/', {'book_id': self.book.id})
-    
-    self.assertEqual(res.status_code, 400)
-    self.assertIn('Transaction limit reached', res.data['error'])
+    def test_checkout_book_limit(self):
+        self.client.force_authenticate(user=self.user)
+        
+        for i in range(5):
+            b = Book.objects.create(
+                title=f"Book{i+2}",
+                author=f"Author{i+2}",
+                isbn=str(uuid.uuid4()), 
+                published_date="2020-01-01",
+                copies_available=2
+            )
+            Transaction.objects.create(user=self.user, book=b)
+        
+        res = self.client.post('/api/checkout/', {'book_id': self.book.id})
+        
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('Transaction limit reached', res.data['error'])

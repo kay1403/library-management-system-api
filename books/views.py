@@ -10,6 +10,8 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.core.mail import send_mail
 from .models import Waitlist
+from django.shortcuts import get_object_or_404
+
 
 
 User = get_user_model()
@@ -120,8 +122,31 @@ class ReturnView(APIView):
                 transaction_obj.return_date = timezone.now()
                 transaction_obj.save()
 
-                transaction_obj.book.copies_available += 1
-                transaction_obj.book.save()
+                book = transaction_obj.book
+                book.copies_available += 1
+                book.save()
+
+                if book.copies_available > 0:
+                    waitlist_entries = Waitlist.objects.filter(
+                        book=book
+                    ).order_by('created_at')
+
+                    if waitlist_entries.exists():
+                        next_entry = waitlist_entries.first()
+                        next_user = next_entry.user
+
+                        send_mail(
+                            subject=f'Book Available: {book.title}',
+                            message=(
+                                f'Dear {next_user.username},\n\n'
+                                f'The book "{book.title}" is now available for checkout.'
+                            ),
+                            from_email=None,
+                            recipient_list=[next_user.email],
+                            fail_silently=False,
+                        )
+
+                        next_entry.delete()
 
             return Response(
                 {"success": "Book returned successfully"},
@@ -134,27 +159,14 @@ class ReturnView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        if transaction_obj.book.copies_available > 0:
-            waitlist_entries = Waitlist.objects.filter(book=transaction_obj.book).order_by('created_at')
-            if waitlist_entries.exists():
-                next_user = waitlist_entries.first().user
-                send_mail(
-                    subject=f'Book Available: {transaction_obj.book.title}',
-                    message=f'Dear {next_user.username},\n\nThe book "{transaction_obj.book.title}" is now available for checkout.',
-                    from_email=None,
-                    recipient_list=[next_user.email],
-                    fail_silently=False,
-                )
-
-                waitlist_entries.first().delete()
-
 
 class JoinWaitlistView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         book_id = request.data.get('book_id')
-        book = Book.objects.get(id=book_id)
+        book = get_object_or_404(Book, id=book_id)
+
 
         from .models import Waitlist
         if Waitlist.objects.filter(user=request.user, book=book).exists():

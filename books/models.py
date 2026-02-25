@@ -47,7 +47,7 @@ class Transaction(models.Model):
             self.checkout_date = timezone.now()
 
         if not self.due_date and not self.return_date:
-            self.due_date = self.checkout_date + timedelta(days=14)
+            self.due_date = timezone.now() + timedelta(days=14)
 
         super().save(*args, **kwargs)
 
@@ -65,3 +65,6 @@ class Waitlist(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     book = models.ForeignKey('Book', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['user', 'book']
