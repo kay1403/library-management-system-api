@@ -1,15 +1,13 @@
-from rest_framework import viewsets, generics, status
+from rest_framework import viewsets, generics, status, filters
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.views import APIView
 from django.utils import timezone
+from django_filters.rest_framework import DjangoFilterBackend
+
 from .models import Book, Loan
 from .serializers import BookSerializer, LoanSerializer, CheckoutSerializer, ReturnSerializer
 from django.contrib.auth import get_user_model
-from rest_framework.authtoken.models import Token
-from rest_framework.views import APIView
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters
 
 User = get_user_model()
 
@@ -50,19 +48,9 @@ class BookViewSet(viewsets.ModelViewSet):
         """
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsAdminUser()]
-        return []
-
-# --------------------------
-# USER VIEWSET
-# --------------------------
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-    def get_permissions(self):
-        if self.action in ['list', 'destroy']:
-            return [IsAdminUser()]
         return [IsAuthenticated()]
+
+
 
 
 # --------------------------
