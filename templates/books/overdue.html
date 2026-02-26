@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="text-2xl font-bold mb-4 text-red-600">Overdue Books</h2>
+
+{% for transaction in transactions %}
+<div class="bg-white p-4 mb-4 shadow rounded">
+    <p class="font-semibold">{{ transaction.book.title }}</p>
+    <p>Due: {{ transaction.due_date }}</p>
+</div>
+{% empty %}
+<p>No overdue books.</p>
+{% endfor %}
+{% endblock %}

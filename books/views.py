@@ -11,6 +11,10 @@ from django.db import transaction
 from django.core.mail import send_mail
 from .models import Waitlist
 from django.shortcuts import get_object_or_404
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+
+
 
 
 
@@ -185,3 +189,16 @@ class OverdueTransactionsView(generics.ListAPIView):
             return_date__isnull=True,
             due_date__lt=timezone.now()
         ).order_by('due_date')
+
+
+
+def book_list_page(request):
+    books = Book.objects.all()
+    return render(request, "books/book_list.html", {"books": books})
+
+
+
+@login_required
+def my_transactions_page(request):
+    transactions = Transaction.objects.filter(user=request.user)
+    return render(request, "books/my_transactions.html", {"transactions": transactions})

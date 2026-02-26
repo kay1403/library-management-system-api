@@ -51,6 +51,14 @@ class Transaction(models.Model):
 
         super().save(*args, **kwargs)
 
+    @property
+    def status(self):
+        if self.return_date:
+            return "returned"
+        elif self.due_date and self.due_date < timezone.now():
+            return "overdue"
+        return "active"
+
     class Meta:
         constraints = [
             models.UniqueConstraint(

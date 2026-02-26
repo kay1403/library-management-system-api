@@ -6,6 +6,13 @@ from rest_framework import generics
 from rest_framework.permissions import AllowAny
 from .serializers import UserSerializer
 
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth import login
+from django.shortcuts import render, redirect
+from django.contrib.auth import logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm
+
 User = get_user_model()
 
 
@@ -34,3 +41,20 @@ class UserViewSet(viewsets.ModelViewSet):
             return [IsAdminUser()]
         # Authenticated users can retrieve/update themselves
         return [IsAuthenticated()]
+
+
+
+def login_page(request):
+    form = AuthenticationForm(request, data=request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        login(request, form.get_user())
+        return redirect("/")
+    return render(request, "users/login.html", {"form": form})
+
+def register_page(request):
+    form = UserCreationForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        user = form.save()
+        login(request, user)
+        return redirect("/")
+    return render(request, "users/register.html", {"form": form})
