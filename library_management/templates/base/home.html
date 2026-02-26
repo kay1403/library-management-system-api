@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Home - Library Management System{% endblock %}
+
+{% block content %}
+<div class="bg-white">
+    <!-- Hero Section -->
+    <div class="relative bg-indigo-800">
+        <div class="absolute inset-0">
+            <img class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80" alt="Library" loading="lazy">
+            <div class="absolute inset-0 bg-indigo-800 mix-blend-multiply"></div>
+        </div>
+        <div class="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8">
+            <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">Welcome to LibraryMS</h1>
+            <p class="mt-6 text-xl text-indigo-100 max-w-3xl">Your digital library management solution. Browse, borrow, and manage books with ease.</p>
+            
+            {% if not user.is_authenticated %}
+            <div class="mt-10 flex space-x-4">
+                <a href="{% url 'register' %}" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-white hover:bg-indigo-50">Get Started</a>
+                <a href="{% url 'book-list' %}" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 bg-opacity-60 hover:bg-opacity-70">Browse Books</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Features & Stats sections (identiques à ton code initial, avec responsive classes correctes) -->
+</div>
+{% endblock %}

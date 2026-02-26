@@ -58,7 +58,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'django_filters',
     'drf_spectacular',
-
+    'tailwind',
+    'theme',
 ]
 
 REST_FRAMEWORK = {
@@ -95,17 +96,24 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'library_management.urls'
 
+TAILWIND_APP_NAME = 'theme'
+
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'libraries': {
+                'url_replace': 'templates.templatetags.url_replace',
+            },
         },
     },
 ]

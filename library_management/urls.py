@@ -1,17 +1,19 @@
 from django.contrib import admin
 from django.urls import path, include
-from django.http import JsonResponse
+#from django.http import JsonResponse
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from . import views
 
-
+"""
 
 def home(request):
     return JsonResponse({
         "message": "Library Management API is running"
     })
-
+"""
 urlpatterns = [
-    path('', home),
+   # path('', home),
+    path('', views.home, name='home'),
     path('admin/', admin.site.urls),
     path('api/', include('books.urls')),
     path('api/', include('users.urls')),

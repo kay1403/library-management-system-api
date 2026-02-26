@@ -4,13 +4,15 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Book, Transaction
+from .models import Book, Transaction, Waitlist
 from .serializers import BookSerializer, TransactionSerializer, CheckoutSerializer, ReturnSerializer
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.core.mail import send_mail
-from .models import Waitlist
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.db.models import Q
 
 
 
@@ -185,3 +187,64 @@ class OverdueTransactionsView(generics.ListAPIView):
             return_date__isnull=True,
             due_date__lt=timezone.now()
         ).order_by('due_date')
+
+
+
+def book_list_view(request):
+    books = Book.objects.all()
+    
+    # Search
+    search = request.GET.get('search', '')
+    if search:
+        books = books.filter(
+            Q(title__icontains=search) |
+            Q(author__icontains=search) |
+            Q(isbn__icontains=search)
+        )
+    
+    # Filters
+    author = request.GET.get('author', '')
+    if author:
+        books = books.filter(author__icontains=author)
+    
+    isbn = request.GET.get('isbn', '')
+    if isbn:
+        books = books.filter(isbn__icontains=isbn)
+    
+    available = request.GET.get('available', '')
+    if available == 'true':
+        books = books.filter(copies_available__gt=0)
+    
+    # Ordering
+    ordering = request.GET.get('ordering', 'title')
+    books = books.order_by(ordering)
+    
+    # Pagination
+    paginator = Paginator(books, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'books': page_obj,
+        'paginator': paginator,
+        'page_obj': page_obj,
+        'is_paginated': page_obj.has_other_pages(),
+    }
+    return render(request, 'books/book_list.html', context)
+
+def book_detail_view(request, pk):
+    book = Book.objects.get(pk=pk)
+    return render(request, 'books/book_detail.html', {'book': book})
+
+@login_required
+def my_transactions_view(request):
+    transactions = Transaction.objects.filter(user=request.user)
+    
+    active = request.GET.get('active', '')
+    if active == 'true':
+        transactions = transactions.filter(return_date__isnull=True)
+    elif active == 'false':
+        transactions = transactions.filter(return_date__isnull=False)
+    
+    context = {'transactions': transactions}
+    return render(request, 'books/my_transactions.html', context)
