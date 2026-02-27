@@ -1,6 +1,9 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import BookViewSet, CheckoutView, ReturnView, MyTransactionsView, JoinWaitlistView, OverdueTransactionsView
+from .views import (
+    BookViewSet, CheckoutView, ReturnView,
+    MyTransactionsView, JoinWaitlistView, OverdueTransactionsView
+)
 
 router = DefaultRouter()
 router.register(r'books', BookViewSet, basename='books')
@@ -11,5 +14,4 @@ urlpatterns = router.urls + [
     path('my-transactions/', MyTransactionsView.as_view(), name='my-transactions'),
     path('waitlist/', JoinWaitlistView.as_view(), name='join-waitlist'),
     path('overdue/', OverdueTransactionsView.as_view(), name='overdue-transactions'),
-
 ]

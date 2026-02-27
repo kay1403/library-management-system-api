@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% block title %}{{ book.title }}{% endblock %}
+
 {% block content %}
 <div class="bg-white shadow p-6 rounded">
     <h2 class="text-2xl font-bold">{{ book.title }}</h2>
@@ -7,5 +9,15 @@
     <p class="mt-2">ISBN: {{ book.isbn }}</p>
     <p>Published: {{ book.published_date }}</p>
     <p>Available: {{ book.copies_available }}</p>
+
+    {% if user.is_authenticated %}
+        <form method="POST" action="{% url 'checkout' %}" class="mt-4">
+            {% csrf_token %}
+            <input type="hidden" name="book_id" value="{{ book.id }}">
+            <button class="bg-blue-600 text-white px-4 py-2 rounded">Checkout</button>
+        </form>
+    {% else %}
+        <p class="mt-4 text-red-600">Please <a href="{% url 'login' %}" class="underline">login</a> to checkout.</p>
+    {% endif %}
 </div>
 {% endblock %}
