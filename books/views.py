@@ -13,7 +13,8 @@ from .models import Waitlist
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-
+from django.contrib import messages
+from django.shortcuts import redirect
 
 
 
@@ -219,3 +220,23 @@ def overdue_books_page(request):
         due_date__lt=timezone.now()
     )
     return render(request, "books/overdue.html", {"transactions": transactions})
+
+
+
+@login_required
+def borrow_book_page(request, book_id):
+    book = get_object_or_404(Book, id=book_id)
+
+    if request.method == "POST":
+        active_count = Transaction.objects.filter(user=request.user, return_date__isnull=True).count()
+        if active_count >= 5:
+            messages.error(request, "Transaction limit reached. You cannot borrow more than 5 books.")
+        elif book.copies_available <= 0:
+            messages.error(request, "No copies available for this book.")
+        else:
+            Transaction.objects.create(user=request.user, book=book)
+            book.copies_available -= 1
+            book.save()
+            messages.success(request, f"You have successfully borrowed '{book.title}'.")
+
+        return redirect('book-detail', book_id=book.id)

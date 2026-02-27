@@ -1,30 +1,28 @@
 {% extends "base.html" %}
 
-{% block title %}My Transactions{% endblock %}
-
 {% block content %}
-<h2 class="text-2xl font-bold mb-6">My Transactions</h2>
+<div class="max-w-6xl mx-auto mt-8">
+    <h1 class="text-3xl font-bold mb-6">My Borrowed Books</h1>
 
-<table class="min-w-full bg-white shadow rounded">
-    <thead>
-        <tr class="bg-gray-200">
-            <th class="py-2 px-4">Book</th>
-            <th class="py-2 px-4">Checkout Date</th>
-            <th class="py-2 px-4">Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for t in transactions %}
-        <tr class="border-t">
-            <td class="py-2 px-4">{{ t.book.title }}</td>
-            <td class="py-2 px-4">{{ t.checkout_date }}</td>
-            <td class="py-2 px-4">{{ t.status }}</td>
-        </tr>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for transaction in transactions %}
+            <div class="bg-white shadow-md rounded-lg p-4">
+                <h2 class="text-xl font-semibold">{{ transaction.book.title }}</h2>
+                <p class="text-gray-600">Author: {{ transaction.book.author|default:"Unknown" }}</p>
+                <p class="text-gray-600">ISBN: {{ transaction.book.isbn }}</p>
+                <p class="text-gray-600">Checkout Date: {{ transaction.checkout_date|date:"Y-m-d" }}</p>
+                <p class="text-gray-600">Due Date: {{ transaction.due_date|date:"Y-m-d" }}</p>
+                <p class="mt-2">
+                    {% if transaction.return_date %}
+                        <span class="text-green-600 font-semibold">Returned</span>
+                    {% else %}
+                        <span class="text-red-600 font-semibold">Borrowed</span>
+                    {% endif %}
+                </p>
+            </div>
         {% empty %}
-        <tr>
-            <td colspan="3" class="text-center py-4">No transactions found.</td>
-        </tr>
+            <p>You have no borrowed books.</p>
         {% endfor %}
-    </tbody>
-</table>
+    </div>
+</div>
 {% endblock %}

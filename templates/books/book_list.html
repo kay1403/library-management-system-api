@@ -1,18 +1,30 @@
 {% extends "base.html" %}
 
-{% block title %}Books{% endblock %}
-
 {% block content %}
-<h2 class="text-2xl font-bold mb-6">Available Books</h2>
+<div class="max-w-6xl mx-auto mt-8">
+    <h1 class="text-3xl font-bold mb-6">Available Books</h1>
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    {% for book in books %}
-    <div class="bg-white shadow-md rounded-lg p-4">
-        <h3 class="text-lg font-semibold">{{ book.title }}</h3>
-        <p class="text-gray-600">{{ book.author }}</p>
-        <p class="text-sm mt-2">Copies: {{ book.copies_available }}</p>
-        <a href="{% url 'book-detail' book.id %}" class="text-blue-600 hover:underline mt-2 block">View Details</a>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for book in books %}
+            <div class="bg-white shadow-md rounded-lg p-4">
+                <h2 class="text-xl font-semibold">{{ book.title }}</h2>
+                <p class="text-gray-600">Author: {{ book.author|default:"Unknown" }}</p>
+                <p class="text-gray-600">ISBN: {{ book.isbn }}</p>
+                <p class="mt-2">
+                    {% if book.copies_available > 0 %}
+                        <span class="text-green-600 font-semibold">Available</span>
+                    {% else %}
+                        <span class="text-red-600 font-semibold">Not Available</span>
+                    {% endif %}
+                </p>
+
+                <a href="{% url 'book-detail' book.id %}" class="text-blue-600 hover:underline mt-3 block">
+                   View Details
+                </a>
+            </div>
+        {% empty %}
+            <p>No books available.</p>
+        {% endfor %}
     </div>
-    {% endfor %}
 </div>
 {% endblock %}

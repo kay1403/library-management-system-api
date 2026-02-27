@@ -1,23 +1,64 @@
 {% extends "base.html" %}
 
-{% block title %}{{ book.title }}{% endblock %}
-
 {% block content %}
-<div class="bg-white shadow p-6 rounded">
-    <h2 class="text-2xl font-bold">{{ book.title }}</h2>
-    <p class="text-gray-600">Author: {{ book.author }}</p>
-    <p class="mt-2">ISBN: {{ book.isbn }}</p>
-    <p>Published: {{ book.published_date }}</p>
-    <p>Available: {{ book.copies_available }}</p>
+<div class="max-w-3xl mx-auto mt-8 bg-white shadow-md rounded-lg p-6">
 
-    {% if user.is_authenticated %}
-        <form method="POST" action="{% url 'checkout' %}" class="mt-4">
+    <!-- Messages Django -->
+    {% if messages %}
+      <ul class="mb-4">
+        {% for message in messages %}
+          <li class="p-3 rounded mb-2 
+              {% if message.tags == 'error' %}
+                  bg-red-100 text-red-700
+              {% elif message.tags == 'success' %}
+                  bg-green-100 text-green-700
+              {% else %}
+                  bg-gray-100 text-gray-700
+              {% endif %}
+          ">
+              {{ message }}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <h1 class="text-3xl font-bold mb-4">{{ book.title }}</h1>
+
+    <p class="text-gray-700"><strong>Author:</strong> {{ book.author|default:"Unknown" }}</p>
+    <p class="text-gray-700"><strong>ISBN:</strong> {{ book.isbn }}</p>
+    <p class="text-gray-700"><strong>Published Date:</strong> {{ book.published_date }}</p>
+
+    <p class="mt-4">
+        {% if book.copies_available > 0 %}
+            <span class="text-green-600 font-semibold">
+                Available ({{ book.copies_available }} copies left)
+            </span>
+        {% else %}
+            <span class="text-red-600 font-semibold">
+                Not Available
+            </span>
+        {% endif %}
+    </p>
+
+    <!-- Borrow Button -->
+    {% if book.copies_available > 0 %}
+        <form method="post" action="{% url 'borrow-book' book.id %}" class="mt-6">
             {% csrf_token %}
-            <input type="hidden" name="book_id" value="{{ book.id }}">
-            <button class="bg-blue-600 text-white px-4 py-2 rounded">Checkout</button>
+            <button type="submit"
+                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                Borrow Book
+            </button>
         </form>
     {% else %}
-        <p class="mt-4 text-red-600">Please <a href="{% url 'login' %}" class="underline">login</a> to checkout.</p>
+        <p class="text-red-600 font-semibold mt-6">
+            This book is currently not available.
+        </p>
     {% endif %}
+
+    <a href="{% url 'books-list' %}"
+       class="text-blue-600 hover:underline mt-6 block">
+        Back to Books
+    </a>
+
 </div>
 {% endblock %}

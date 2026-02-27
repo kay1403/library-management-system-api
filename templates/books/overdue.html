@@ -1,16 +1,21 @@
 {% extends "base.html" %}
 
-{% block title %}Overdue Books{% endblock %}
-
 {% block content %}
-<h2 class="text-2xl font-bold mb-4 text-red-600">Overdue Books</h2>
+<div class="max-w-6xl mx-auto mt-8">
+    <h1 class="text-3xl font-bold mb-6">Overdue Books</h1>
 
-{% for transaction in transactions %}
-<div class="bg-white p-4 mb-4 shadow rounded">
-    <p class="font-semibold">{{ transaction.book.title }}</p>
-    <p>Due: {{ transaction.due_date }}</p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for transaction in transactions %}
+            <div class="bg-white shadow-md rounded-lg p-4 border border-red-500">
+                <h2 class="text-xl font-semibold">{{ transaction.book.title }}</h2>
+                <p class="text-gray-600">Author: {{ transaction.book.author|default:"Unknown" }}</p>
+                <p class="text-gray-600">Checkout Date: {{ transaction.checkout_date|date:"Y-m-d" }}</p>
+                <p class="text-gray-600">Due Date: {{ transaction.due_date|date:"Y-m-d" }}</p>
+                <span class="text-red-600 font-bold">Overdue</span>
+            </div>
+        {% empty %}
+            <p>No overdue books.</p>
+        {% endfor %}
+    </div>
 </div>
-{% empty %}
-<p>No overdue books.</p>
-{% endfor %}
 {% endblock %}
