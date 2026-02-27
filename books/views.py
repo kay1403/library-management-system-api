@@ -192,13 +192,30 @@ class OverdueTransactionsView(generics.ListAPIView):
 
 
 
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from .models import Book, Transaction
+
 def book_list_page(request):
     books = Book.objects.all()
     return render(request, "books/book_list.html", {"books": books})
 
-
+@login_required
+def book_detail_page(request, book_id):
+    book = get_object_or_404(Book, id=book_id)
+    return render(request, "books/book_detail.html", {"book": book})
 
 @login_required
 def my_transactions_page(request):
     transactions = Transaction.objects.filter(user=request.user)
     return render(request, "books/my_transactions.html", {"transactions": transactions})
+
+@login_required
+def overdue_books_page(request):
+    transactions = Transaction.objects.filter(
+        user=request.user,
+        return_date__isnull=True,
+        due_date__lt=timezone.now()
+    )
+    return render(request, "books/overdue.html", {"transactions": transactions})
