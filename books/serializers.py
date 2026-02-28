@@ -8,7 +8,7 @@ User = get_user_model()
 
 class BookSerializer(serializers.ModelSerializer):
     """
-    Serializer pour les livres
+    Serializer for books
     """
     available_copies = serializers.IntegerField(source='copies_available', read_only=True)
     
@@ -18,18 +18,18 @@ class BookSerializer(serializers.ModelSerializer):
 
     def validate_copies_available(self, value):
         if value < 0:
-            raise serializers.ValidationError("Le nombre de copies ne peut pas être négatif.")
+            raise serializers.ValidationError("The number of copies cannot be negative.")
         return value
 
     def validate_published_date(self, value):
         if value > timezone.now().date():
-            raise serializers.ValidationError("La date de publication ne peut pas être dans le futur.")
+            raise serializers.ValidationError("The publication date cannot be in the future.")
         return value
 
 
 class TransactionSerializer(serializers.ModelSerializer):
     """
-    Serializer pour les transactions - Version enrichie pour le front
+    Serializer for transactions - Enriched version for the frontend
     """
     book_title = serializers.CharField(source='book.title', read_only=True)
     book_author = serializers.CharField(source='book.author', read_only=True)
@@ -49,7 +49,7 @@ class TransactionSerializer(serializers.ModelSerializer):
         read_only_fields = ['checkout_date', 'due_date']
 
     def get_status(self, obj):
-        """Retourne le statut lisible de la transaction"""
+        """Returns the human-readable status of the transaction"""
         if obj.return_date:
             return "returned"
         if obj.due_date and obj.due_date < timezone.now():
@@ -57,20 +57,20 @@ class TransactionSerializer(serializers.ModelSerializer):
         return "active"
 
     def get_days_until_due(self, obj):
-        """Calcule le nombre de jours restants avant la date de retour"""
+        """Calculates the number of days remaining before the return date"""
         if obj.return_date or not obj.due_date:
             return None
         delta = obj.due_date - timezone.now()
         return delta.days
 
     def get_is_overdue(self, obj):
-        """Indique si la transaction est en retard"""
+        """Indicates if the transaction is overdue"""
         return bool(obj.due_date and obj.due_date < timezone.now() and not obj.return_date)
 
 
 class TransactionCreateSerializer(serializers.Serializer):
     """
-    Serializer pour la création d'un emprunt
+    Serializer for creating a loan/checkout
     """
     book_id = serializers.IntegerField(required=True)
 
@@ -78,22 +78,22 @@ class TransactionCreateSerializer(serializers.Serializer):
         try:
             book = Book.objects.get(id=value)
             if book.copies_available <= 0:
-                raise serializers.ValidationError("Ce livre n'est pas disponible.")
+                raise serializers.ValidationError("This book is not available.")
             return value
         except Book.DoesNotExist:
-            raise serializers.ValidationError("Livre non trouvé.")
+            raise serializers.ValidationError("Book not found.")
 
 
 class TransactionReturnSerializer(serializers.Serializer):
     """
-    Serializer pour le retour d'un livre
+    Serializer for returning a book
     """
     transaction_id = serializers.IntegerField(required=True)
 
 
 class WaitlistSerializer(serializers.ModelSerializer):
     """
-    Serializer pour la liste d'attente
+    Serializer for the waitlist
     """
     book_title = serializers.CharField(source='book.title', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
@@ -104,7 +104,7 @@ class WaitlistSerializer(serializers.ModelSerializer):
         fields = ['id', 'book', 'book_title', 'user', 'username', 'created_at', 'position']
 
     def get_position(self, obj):
-        """Calcule la position dans la file d'attente"""
+        """Calculates the position in the waiting queue"""
         waitlist = Waitlist.objects.filter(book=obj.book).order_by('created_at')
         for idx, item in enumerate(waitlist):
             if item.id == obj.id:
@@ -114,7 +114,7 @@ class WaitlistSerializer(serializers.ModelSerializer):
 
 class WaitlistCreateSerializer(serializers.Serializer):
     """
-    Serializer pour rejoindre la liste d'attente
+    Serializer to join the waitlist
     """
     book_id = serializers.IntegerField(required=True)
 
@@ -123,4 +123,4 @@ class WaitlistCreateSerializer(serializers.Serializer):
             Book.objects.get(id=value)
             return value
         except Book.DoesNotExist:
-            raise serializers.ValidationError("Livre non trouvé.")
+            raise serializers.ValidationError("Book not found.")

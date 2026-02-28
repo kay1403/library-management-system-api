@@ -13,7 +13,6 @@ from .serializers import UserSerializer
 
 User = get_user_model()
 
-# Formulaire d'inscription personnalisé
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
     
@@ -66,8 +65,7 @@ def register_page(request):
             login(request, user)
             return redirect("/")
         else:
-            # Ajoutez ceci pour voir les erreurs dans la console
-            print("Erreurs du formulaire:", form.errors)
+            print("Errors in form:", form.errors)
     else:
         form = CustomUserCreationForm()
     return render(request, "users/register.html", {"form": form})

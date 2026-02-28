@@ -21,13 +21,13 @@ from .serializers import (
 User = get_user_model()
 
 
-# ====================== API VIEWS (pour frontend dynamique) ======================
+# ====================== API VIEWS (for dynamic frontend) ======================
 
 class BookViewSet(viewsets.ModelViewSet):
     """
-    API CRUD pour les livres
-    - GET : accessible à tous (authentifié ou non)
-    - POST/PUT/DELETE : réservé aux admins
+    CRUD API for books
+    - GET: accessible to everyone (authenticated or not)
+    - POST/PUT/DELETE: reserved for admins
     """
     serializer_class = BookSerializer
     queryset = Book.objects.all()
@@ -39,15 +39,15 @@ class BookViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """
-        Permissions différenciées selon l'action
+        Differentiated permissions based on action
         """
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsAdminUser()]
-        return [AllowAny()]  # Tout le monde peut voir les livres
+        return [AllowAny()]  # Everyone can view books
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        # Filtre par disponibilité
+        # Filter by availability
         available = self.request.query_params.get('available')
         if available and available.lower() == 'true':
             queryset = queryset.filter(copies_available__gt=0)
@@ -56,7 +56,7 @@ class BookViewSet(viewsets.ModelViewSet):
 
 class CheckoutAPIView(APIView):
     """
-    API pour emprunter un livre
+    API to borrow a book
     POST /api/checkout/ {book_id: 1}
     """
     permission_classes = [IsAuthenticated]
@@ -70,14 +70,14 @@ class CheckoutAPIView(APIView):
         book_id = serializer.validated_data['book_id']
         user = request.user
 
-        # Vérifier si l'utilisateur est un membre actif
+        # Check if the user is an active member
         if hasattr(user, 'is_active_member') and not user.is_active_member:
             return Response(
-                {'error': 'Votre compte est inactif. Contactez l\'administrateur.'},
+                {'error': 'Your account is inactive. Please contact the administrator.'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # Vérifier la limite d'emprunts
+        # Check loan limit
         active_count = Transaction.objects.filter(
             user=user,
             return_date__isnull=True
@@ -85,7 +85,7 @@ class CheckoutAPIView(APIView):
 
         if active_count >= self.MAX_ACTIVE_TRANSACTIONS:
             return Response(
-                {'error': f'Limite d\'emprunts atteinte ({self.MAX_ACTIVE_TRANSACTIONS} maximum).'},
+                {'error': f'Loan limit reached ({self.MAX_ACTIVE_TRANSACTIONS} maximum).'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -93,34 +93,34 @@ class CheckoutAPIView(APIView):
             with db_transaction.atomic():
                 book = Book.objects.select_for_update().get(id=book_id)
 
-                # Vérifier la disponibilité
+                # Check availability
                 if book.copies_available <= 0:
                     return Response(
-                        {'error': 'Ce livre n\'est pas disponible actuellement.'},
+                        {'error': 'This book is not currently available.'},
                         status=status.HTTP_400_BAD_REQUEST
                     )
 
-                # Vérifier si déjà emprunté
+                # Check if already borrowed
                 if Transaction.objects.filter(
                     user=user,
                     book=book,
                     return_date__isnull=True
                 ).exists():
                     return Response(
-                        {'error': 'Vous avez déjà emprunté ce livre.'},
+                        {'error': 'You have already borrowed this book.'},
                         status=status.HTTP_400_BAD_REQUEST
                     )
 
-                # Créer la transaction
+                # Create transaction
                 transaction = Transaction.objects.create(user=user, book=book)
                 book.copies_available -= 1
                 book.save()
 
-                # Retourner la transaction créée
+                # Return the created transaction
                 response_serializer = TransactionSerializer(transaction)
                 return Response(
                     {
-                        'success': 'Livre emprunté avec succès!',
+                        'success': 'Book borrowed successfully!',
                         'transaction': response_serializer.data
                     },
                     status=status.HTTP_201_CREATED
@@ -128,14 +128,14 @@ class CheckoutAPIView(APIView):
 
         except Book.DoesNotExist:
             return Response(
-                {'error': 'Livre non trouvé.'},
+                {'error': 'Book not found.'},
                 status=status.HTTP_404_NOT_FOUND
             )
 
 
 class ReturnAPIView(APIView):
     """
-    API pour retourner un livre
+    API to return a book
     POST /api/return/ {transaction_id: 1}
     """
     permission_classes = [IsAuthenticated]
@@ -149,46 +149,46 @@ class ReturnAPIView(APIView):
 
         try:
             with db_transaction.atomic():
-                # Récupérer la transaction active
+                # Retrieve the active transaction
                 transaction = Transaction.objects.select_for_update().get(
                     id=transaction_id,
                     user=request.user,
                     return_date__isnull=True
                 )
 
-                # Marquer comme retourné
+                # Mark as returned
                 transaction.return_date = timezone.now()
                 transaction.save()
 
-                # Remettre le livre en stock
+                # Put the book back in stock
                 book = transaction.book
                 book.copies_available += 1
                 book.save()
 
-                # Vérifier la liste d'attente
+                # Check the waitlist
                 waitlist_entries = Waitlist.objects.filter(book=book).order_by('created_at')
                 if waitlist_entries.exists():
                     next_entry = waitlist_entries.first()
                     try:
                         send_mail(
-                            subject=f'Livre disponible : {book.title}',
+                            subject=f'Book available: {book.title}',
                             message=(
-                                f'Bonjour {next_entry.user.username},\n\n'
-                                f'Le livre "{book.title}" est maintenant disponible.\n'
-                                f'Connectez-vous pour l\'emprunter !'
+                                f'Hello {next_entry.user.username},\n\n'
+                                f'The book "{book.title}" is now available.\n'
+                                f'Log in to borrow it!'
                             ),
                             from_email=None,
                             recipient_list=[next_entry.user.email],
-                            fail_silently=True,  # Ne pas bloquer si l'email échoue
+                            fail_silently=True,  # Do not block if email fails
                         )
                     except Exception as e:
-                        # Log l'erreur mais ne pas bloquer le retour
-                        print(f"Erreur d'envoi d'email: {e}")
+                        # Log the error but do not block the return process
+                        print(f"Email sending error: {e}")
 
                 response_serializer = TransactionSerializer(transaction)
                 return Response(
                     {
-                        'success': 'Livre retourné avec succès!',
+                        'success': 'Book returned successfully!',
                         'transaction': response_serializer.data
                     },
                     status=status.HTTP_200_OK
@@ -196,14 +196,14 @@ class ReturnAPIView(APIView):
 
         except Transaction.DoesNotExist:
             return Response(
-                {'error': 'Transaction active non trouvée.'},
+                {'error': 'Active transaction not found.'},
                 status=status.HTTP_404_NOT_FOUND
             )
 
 
 class MyTransactionsAPIView(generics.ListAPIView):
     """
-    API pour lister les transactions de l'utilisateur connecté
+    API to list transactions of the logged-in user
     GET /api/my-transactions/?status=active|returned|overdue
     """
     serializer_class = TransactionSerializer
@@ -212,7 +212,7 @@ class MyTransactionsAPIView(generics.ListAPIView):
     def get_queryset(self):
         queryset = Transaction.objects.filter(user=self.request.user)
 
-        # Filtre par statut
+        # Filter by status
         status_filter = self.request.query_params.get('status')
         if status_filter == 'active':
             queryset = queryset.filter(return_date__isnull=True)
@@ -229,7 +229,7 @@ class MyTransactionsAPIView(generics.ListAPIView):
 
 class OverdueTransactionsAPIView(generics.ListAPIView):
     """
-    API pour lister les transactions en retard
+    API to list overdue transactions
     GET /api/overdue/
     """
     serializer_class = TransactionSerializer
@@ -245,7 +245,7 @@ class OverdueTransactionsAPIView(generics.ListAPIView):
 
 class JoinWaitlistAPIView(APIView):
     """
-    API pour rejoindre la liste d'attente d'un livre
+    API to join the waitlist for a book
     POST /api/waitlist/ {book_id: 1}
     """
     permission_classes = [IsAuthenticated]
@@ -258,27 +258,27 @@ class JoinWaitlistAPIView(APIView):
         book_id = serializer.validated_data['book_id']
         book = get_object_or_404(Book, id=book_id)
 
-        # Vérifier si déjà dans la liste d'attente
+        # Check if already in waitlist
         if Waitlist.objects.filter(user=request.user, book=book).exists():
             return Response(
-                {'error': 'Vous êtes déjà dans la liste d\'attente pour ce livre.'},
+                {'error': 'You are already on the waitlist for this book.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Vérifier si le livre est disponible (pas besoin d'attente)
+        # Check if book is available (no need for waitlist)
         if book.copies_available > 0:
             return Response(
-                {'warning': 'Ce livre est disponible, vous pouvez l\'emprunter directement !'},
+                {'warning': 'This book is available, you can borrow it directly!'},
                 status=status.HTTP_200_OK
             )
 
-        # Ajouter à la liste d'attente
+        # Add to waitlist
         waitlist = Waitlist.objects.create(user=request.user, book=book)
 
         response_serializer = WaitlistSerializer(waitlist)
         return Response(
             {
-                'success': 'Ajouté à la liste d\'attente avec succès!',
+                'success': 'Successfully added to the waitlist!',
                 'waitlist': response_serializer.data
             },
             status=status.HTTP_201_CREATED
@@ -287,7 +287,7 @@ class JoinWaitlistAPIView(APIView):
 
 class WaitlistAPIView(generics.ListAPIView):
     """
-    API pour voir la liste d'attente d'un livre
+    API to view the waitlist for a book
     GET /api/waitlist/?book_id=1
     """
     serializer_class = WaitlistSerializer
@@ -302,7 +302,7 @@ class WaitlistAPIView(generics.ListAPIView):
 
 class CancelWaitlistAPIView(APIView):
     """
-    API pour quitter la liste d'attente
+    API to leave the waitlist
     DELETE /api/waitlist/{id}/
     """
     permission_classes = [IsAuthenticated]
@@ -311,15 +311,15 @@ class CancelWaitlistAPIView(APIView):
         waitlist = get_object_or_404(Waitlist, id=waitlist_id, user=request.user)
         waitlist.delete()
         return Response(
-            {'success': 'Retiré de la liste d\'attente.'},
+            {'success': 'Removed from the waitlist.'},
             status=status.HTTP_200_OK
         )
 
 
-# ====================== TEMPLATE VIEWS (pour rendu HTML) ======================
+# ====================== TEMPLATE VIEWS (for HTML rendering) ======================
 
 def book_list_page(request):
-    """Page liste des livres (HTML)"""
+    """Book list page (HTML)"""
     books = Book.objects.all()
     return render(request, "books/book_list.html", {"books": books})
 
@@ -328,6 +328,7 @@ def book_list_page(request):
 def book_detail_page(request, book_id):
     """Page détail d'un livre (HTML)"""
     book = get_object_or_404(Book, id=book_id)
+    
     # Vérifier si l'utilisateur a déjà emprunté ce livre
     user_has_borrowed = Transaction.objects.filter(
         user=request.user,
@@ -336,44 +337,39 @@ def book_detail_page(request, book_id):
     ).exists()
     
     # Vérifier si l'utilisateur est dans la liste d'attente
-    user_in_waitlist = Waitlist.objects.filter(
+    user_waitlist_entry = Waitlist.objects.filter(
         user=request.user,
         book=book
-    ).exists()
+    ).first()
+    
+    user_in_waitlist = user_waitlist_entry is not None
+    user_waitlist_id = user_waitlist_entry.id if user_waitlist_entry else None  # AJOUTE ÇA
+    
+    # Calculer la position dans la file d'attente
+    waitlist_position = None
+    if user_in_waitlist:
+        waitlist_position = Waitlist.objects.filter(
+            book=book,
+            created_at__lt=user_waitlist_entry.created_at
+        ).count() + 1
     
     context = {
         "book": book,
         "user_has_borrowed": user_has_borrowed,
-        "user_in_waitlist": user_in_waitlist
+        "user_in_waitlist": user_in_waitlist,
+        "user_waitlist_id": user_waitlist_id,  # AJOUTE ÇA
+        "waitlist_position": waitlist_position
     }
     return render(request, "books/book_detail.html", context)
 
 
 @login_required
-def my_transactions_page(request):
-    """Page mes transactions (HTML)"""
-    transactions = Transaction.objects.filter(user=request.user).order_by('-checkout_date')
-    return render(request, "books/my_transactions.html", {"transactions": transactions})
-
-
-@login_required
-def overdue_books_page(request):
-    """Page livres en retard (HTML)"""
-    transactions = Transaction.objects.filter(
-        user=request.user,
-        return_date__isnull=True,
-        due_date__lt=timezone.now()
-    ).order_by('due_date')
-    return render(request, "books/overdue.html", {"transactions": transactions})
-
-
-@login_required
 def borrow_book_page(request, book_id):
     """
-    Vue template pour emprunter un livre (redirige vers l'API)
+    Template view to borrow a book (redirects to the API)
     """
     if request.method == "POST":
-        # Utiliser l'API en interne
+        # Use the API internally
         from rest_framework.test import APIRequestFactory
         factory = APIRequestFactory()
         api_request = factory.post('/api/checkout/', {'book_id': book_id}, format='json')
@@ -382,9 +378,9 @@ def borrow_book_page(request, book_id):
         response = CheckoutAPIView.as_view()(api_request)
         
         if response.status_code == 201:
-            messages.success(request, "Livre emprunté avec succès!")
+            messages.success(request, "Book borrowed successfully!")
         else:
-            error_msg = response.data.get('error', 'Erreur lors de l\'emprunt')
+            error_msg = response.data.get('error', 'Error while borrowing')
             messages.error(request, error_msg)
         
         return redirect('book-detail', book_id=book_id)
@@ -395,7 +391,7 @@ def borrow_book_page(request, book_id):
 @login_required
 def return_book_page(request, transaction_id):
     """
-    Vue template pour retourner un livre
+    Template view to return a book
     """
     if request.method == "POST":
         from rest_framework.test import APIRequestFactory
@@ -406,26 +402,29 @@ def return_book_page(request, transaction_id):
         response = ReturnAPIView.as_view()(api_request)
         
         if response.status_code == 200:
-            messages.success(request, "Livre retourné avec succès!")
+            messages.success(request, "Book returned successfully!")
         else:
-            error_msg = response.data.get('error', 'Erreur lors du retour')
+            error_msg = response.data.get('error', 'Error while returning')
             messages.error(request, error_msg)
         
         return redirect('my-transactions')
     
-    return redirect('my-transactions')@login_required
+    return redirect('my-transactions')
+
+
+@login_required
 def my_transactions_page(request):
-    """Page mes transactions (HTML)"""
+    """My transactions page (HTML)"""
     transactions = Transaction.objects.filter(user=request.user).order_by('-checkout_date')
     
-    # Calculer les stats
+    # Calculate stats
     transactions_active = transactions.filter(return_date__isnull=True).count()
     transactions_overdue = transactions.filter(
         return_date__isnull=True,
         due_date__lt=timezone.now()
     ).count()
     
-    # Ajouter l'attribut is_overdue à chaque transaction
+    # Add is_overdue attribute to each transaction
     for transaction in transactions:
         transaction.is_overdue = transaction.due_date and transaction.due_date < timezone.now() and not transaction.return_date
         if transaction.due_date and not transaction.return_date:
@@ -441,19 +440,37 @@ def my_transactions_page(request):
     }
     return render(request, "books/my_transactions.html", context)
 
+
 @login_required
 def overdue_books_page(request):
-    """Page livres en retard (HTML)"""
+    """Overdue books page (HTML)"""
     transactions = Transaction.objects.filter(
         user=request.user,
         return_date__isnull=True,
         due_date__lt=timezone.now()
     ).order_by('due_date')
     
-    # Calculer les jours de retard
+    # Calculate days overdue
     for transaction in transactions:
         delta = timezone.now() - transaction.due_date
         transaction.days_overdue = delta.days
     
     return render(request, "books/overdue.html", {"transactions": transactions})
 
+@login_required
+def waitlist_page(request):
+    """Page liste d'attente de l'utilisateur"""
+    from .models import Waitlist
+    
+    waitlist_items = Waitlist.objects.filter(user=request.user).select_related('book').order_by('created_at')
+    
+    # Calculer la position pour chaque élément
+    for item in waitlist_items:
+        # Compter combien de personnes sont devant dans la file d'attente pour ce livre
+        position = Waitlist.objects.filter(
+            book=item.book,
+            created_at__lt=item.created_at
+        ).count() + 1
+        item.position = position
+    
+    return render(request, "books/waitlist.html", {"waitlist_items": waitlist_items})
