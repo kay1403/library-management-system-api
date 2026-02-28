@@ -1,10 +1,39 @@
 {% extends "base.html" %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Home | Library{% endblock %}
 
 {% block content %}
-<div class="text-center">
-    <h2 class="text-3xl font-bold mb-4">Welcome to Library Management</h2>
-    <p class="text-gray-600">Manage books, transactions and waitlists.</p>
+<div class="text-center py-12">
+    <h2 class="text-4xl font-bold text-gray-800 mb-4">Welcome to Library Management</h2>
+    <p class="text-lg text-gray-600 mb-8">Manage books, transactions and waitlists.</p>
+    
+    {% if not user.is_authenticated %}
+        <div class="space-x-4">
+            <a href="{% url 'login' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition">Login</a>
+            <a href="{% url 'register' %}" class="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition">Register</a>
+        </div>
+    {% else %}
+        <div class="space-x-4">
+            <a href="{% url 'books-list' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition">Browse Books</a>
+        </div>
+    {% endif %}
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+    <div class="bg-white p-6 rounded-lg shadow-md text-center">
+        <div class="text-4xl mb-4">📚</div>
+        <h3 class="font-semibold text-lg">Browse Books</h3>
+        <p class="text-gray-500 text-sm mt-2">Explore our collection of books</p>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-md text-center">
+        <div class="text-4xl mb-4">📖</div>
+        <h3 class="font-semibold text-lg">Borrow & Return</h3>
+        <p class="text-gray-500 text-sm mt-2">Easy borrowing and returning process</p>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-md text-center">
+        <div class="text-4xl mb-4">⏰</div>
+        <h3 class="font-semibold text-lg">Track Due Dates</h3>
+        <p class="text-gray-500 text-sm mt-2">Never miss a return date</p>
+    </div>
 </div>
 {% endblock %}

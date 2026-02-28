@@ -1,27 +1,41 @@
 {% extends "base.html" %}
 
+{% block title %}My Borrowed Books | Library{% endblock %}
+
 {% block content %}
-<div class="max-w-6xl mx-auto mt-8">
+<div class="max-w-6xl mx-auto">
     <h1 class="text-3xl font-bold mb-6">My Borrowed Books</h1>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         {% for transaction in transactions %}
-            <div class="bg-white shadow-md rounded-lg p-4">
-                <h2 class="text-xl font-semibold">{{ transaction.book.title }}</h2>
-                <p class="text-gray-600">Author: {{ transaction.book.author|default:"Unknown" }}</p>
-                <p class="text-gray-600">ISBN: {{ transaction.book.isbn }}</p>
-                <p class="text-gray-600">Checkout Date: {{ transaction.checkout_date|date:"Y-m-d" }}</p>
-                <p class="text-gray-600">Due Date: {{ transaction.due_date|date:"Y-m-d" }}</p>
-                <p class="mt-2">
+            <div class="bg-white shadow-md rounded-lg p-4 {% if not transaction.return_date and transaction.due_date and transaction.due_date < now %}border-l-4 border-red-500{% endif %}">
+                <h2 class="text-xl font-semibold mb-2">{{ transaction.book.title }}</h2>
+                <p class="text-gray-600">by {{ transaction.book.author|default:"Unknown" }}</p>
+                
+                <div class="mt-3 space-y-1 text-sm">
+                    <p><span class="font-medium">Checkout:</span> {{ transaction.checkout_date|date:"M d, Y" }}</p>
+                    <p><span class="font-medium">Due Date:</span> {{ transaction.due_date|date:"M d, Y" }}</p>
+                </div>
+                
+                <div class="mt-4">
                     {% if transaction.return_date %}
-                        <span class="text-green-600 font-semibold">Returned</span>
+                        <span class="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                            Returned on {{ transaction.return_date|date:"M d, Y" }}
+                        </span>
                     {% else %}
-                        <span class="text-red-600 font-semibold">Borrowed</span>
+                        <span class="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                            Borrowed
+                        </span>
                     {% endif %}
-                </p>
+                </div>
             </div>
         {% empty %}
-            <p>You have no borrowed books.</p>
+            <div class="col-span-full text-center py-8">
+                <p class="text-gray-500">You have no borrowed books.</p>
+                <a href="{% url 'books-list' %}" class="inline-block mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                    Browse Books
+                </a>
+            </div>
         {% endfor %}
     </div>
 </div>

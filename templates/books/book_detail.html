@@ -1,64 +1,49 @@
 {% extends "base.html" %}
 
+{% block title %}{{ book.title }} | Library{% endblock %}
+
 {% block content %}
-<div class="max-w-3xl mx-auto mt-8 bg-white shadow-md rounded-lg p-6">
+<div class="max-w-3xl mx-auto">
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h1 class="text-3xl font-bold mb-4">{{ book.title }}</h1>
 
-    <!-- Messages Django -->
-    {% if messages %}
-      <ul class="mb-4">
-        {% for message in messages %}
-          <li class="p-3 rounded mb-2 
-              {% if message.tags == 'error' %}
-                  bg-red-100 text-red-700
-              {% elif message.tags == 'success' %}
-                  bg-green-100 text-green-700
-              {% else %}
-                  bg-gray-100 text-gray-700
-              {% endif %}
-          ">
-              {{ message }}
-          </li>
-        {% endfor %}
-      </ul>
-    {% endif %}
+        <div class="space-y-3">
+            <p class="text-gray-700"><span class="font-semibold">Author:</span> {{ book.author|default:"Unknown" }}</p>
+            <p class="text-gray-700"><span class="font-semibold">ISBN:</span> {{ book.isbn }}</p>
+            <p class="text-gray-700"><span class="font-semibold">Published:</span> {{ book.published_date|date:"F j, Y" }}</p>
+            
+            <p class="mt-4">
+                {% if book.copies_available > 0 %}
+                    <span class="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-full font-semibold">
+                        Available ({{ book.copies_available }} copy{{ book.copies_available|pluralize }} left)
+                    </span>
+                {% else %}
+                    <span class="inline-block bg-red-100 text-red-800 px-4 py-2 rounded-full font-semibold">
+                        Not Available
+                    </span>
+                {% endif %}
+            </p>
 
-    <h1 class="text-3xl font-bold mb-4">{{ book.title }}</h1>
+            <!-- Borrow Button -->
+            {% if book.copies_available > 0 %}
+                <form method="post" action="{% url 'borrow-book' book.id %}" class="mt-6">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition">
+                        Borrow Book
+                    </button>
+                </form>
+            {% else %}
+                <p class="text-red-600 font-semibold mt-6">
+                    This book is currently not available.
+                </p>
+            {% endif %}
 
-    <p class="text-gray-700"><strong>Author:</strong> {{ book.author|default:"Unknown" }}</p>
-    <p class="text-gray-700"><strong>ISBN:</strong> {{ book.isbn }}</p>
-    <p class="text-gray-700"><strong>Published Date:</strong> {{ book.published_date }}</p>
-
-    <p class="mt-4">
-        {% if book.copies_available > 0 %}
-            <span class="text-green-600 font-semibold">
-                Available ({{ book.copies_available }} copies left)
-            </span>
-        {% else %}
-            <span class="text-red-600 font-semibold">
-                Not Available
-            </span>
-        {% endif %}
-    </p>
-
-    <!-- Borrow Button -->
-    {% if book.copies_available > 0 %}
-        <form method="post" action="{% url 'borrow-book' book.id %}" class="mt-6">
-            {% csrf_token %}
-            <button type="submit"
-                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
-                Borrow Book
-            </button>
-        </form>
-    {% else %}
-        <p class="text-red-600 font-semibold mt-6">
-            This book is currently not available.
-        </p>
-    {% endif %}
-
-    <a href="{% url 'books-list' %}"
-       class="text-blue-600 hover:underline mt-6 block">
-        Back to Books
-    </a>
-
+            <div class="mt-6 pt-4 border-t">
+                <a href="{% url 'books-list' %}" class="text-blue-600 hover:text-blue-800 font-medium">
+                    ← Back to Books
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
