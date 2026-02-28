@@ -58,6 +58,19 @@ class Transaction(models.Model):
         elif self.due_date and self.due_date < timezone.now():
             return "overdue"
         return "active"
+        
+    def is_overdue(self):
+        """Vérifie si la transaction est en retard"""
+        if self.return_date:
+            return False
+        return self.due_date and self.due_date < timezone.now()
+    
+    def days_overdue(self):
+        """Retourne le nombre de jours de retard"""
+        if not self.is_overdue():
+            return 0
+        delta = timezone.now() - self.due_date
+        return delta.days
 
     class Meta:
         constraints = [
