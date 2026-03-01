@@ -1,18 +1,14 @@
 from django.contrib import admin
 from django.urls import path, include
-from django.shortcuts import render
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from books.views import book_list_page, my_transactions_page, book_detail_page, overdue_books_page, waitlist_page
+from books.views import book_list_page, my_transactions_page, book_detail_page, overdue_books_page, waitlist_page, home_page  # Ajoute home_page ici
 from users.views import login_page, register_page
 from django.contrib.auth import views as auth_views
-from books.views import home_page 
 
-def home_page(request):
-    return render(request, "home.html")
 
 urlpatterns = [
     # Pages principales
-    path('', home_page, name='home_page'),
+    path('', home_page, name='home_page'),  
     path('books/', book_list_page, name='books-list'),
     path('books/<int:book_id>/', book_detail_page, name='book-detail'),
     path('my-transactions/', my_transactions_page, name='my-transactions'),
@@ -27,7 +23,7 @@ urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
     
-    # API - Note: on inclut books.urls qui contient toutes les routes API
+    # API
     path('', include('books.urls')),
     path('api/users/', include('users.urls')),
     
