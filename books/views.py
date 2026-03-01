@@ -475,6 +475,14 @@ def waitlist_page(request):
 
 
 def home_page(request):
+    print("="*50)
+    print("HOME PAGE VIEW CALLED")
+    print(f"Request path: {request.path}")
+    print(f"User authenticated: {request.user.is_authenticated}")
+    print(f"Request method: {request.method}")
+    print("="*50)
+    
+    # ... reste de ta fonction
     total_books = Book.objects.count()
     total_members = User.objects.filter(is_active_member=True).count()
     books_borrowed = Transaction.objects.filter(return_date__isnull=True).count()
