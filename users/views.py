@@ -26,6 +26,7 @@ class CustomUserCreationForm(UserCreationForm):
         if commit:
             user.save()
         return user
+        
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = UserSerializer

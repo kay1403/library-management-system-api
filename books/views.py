@@ -332,14 +332,12 @@ def book_detail_page(request, book_id):
     """Page détail d'un livre (HTML)"""
     book = get_object_or_404(Book, id=book_id)
     
-    # Vérifier si l'utilisateur a déjà emprunté ce livre
     user_has_borrowed = Transaction.objects.filter(
         user=request.user,
         book=book,
         return_date__isnull=True
     ).exists()
     
-    # Vérifier si l'utilisateur est dans la liste d'attente
     user_waitlist_entry = Waitlist.objects.filter(
         user=request.user,
         book=book
@@ -348,7 +346,6 @@ def book_detail_page(request, book_id):
     user_in_waitlist = user_waitlist_entry is not None
     user_waitlist_id = user_waitlist_entry.id if user_waitlist_entry else None  # AJOUTE ÇA
     
-    # Calculer la position dans la file d'attente
     waitlist_position = None
     if user_in_waitlist:
         waitlist_position = Waitlist.objects.filter(
@@ -360,7 +357,7 @@ def book_detail_page(request, book_id):
         "book": book,
         "user_has_borrowed": user_has_borrowed,
         "user_in_waitlist": user_in_waitlist,
-        "user_waitlist_id": user_waitlist_id,  # AJOUTE ÇA
+        "user_waitlist_id": user_waitlist_id,
         "waitlist_position": waitlist_position
     }
     return render(request, "books/book_detail.html", context)
@@ -467,9 +464,7 @@ def waitlist_page(request):
     
     waitlist_items = Waitlist.objects.filter(user=request.user).select_related('book').order_by('created_at')
     
-    # Calculer la position pour chaque élément
     for item in waitlist_items:
-        # Compter combien de personnes sont devant dans la file d'attente pour ce livre
         position = Waitlist.objects.filter(
             book=item.book,
             created_at__lt=item.created_at
@@ -480,13 +475,11 @@ def waitlist_page(request):
 
 
 def home_page(request):
-    # Statistiques globales
     total_books = Book.objects.count()
     total_members = User.objects.filter(is_active_member=True).count()
     books_borrowed = Transaction.objects.filter(return_date__isnull=True).count()
     available_books = Book.objects.filter(copies_available__gt=0).count()
     
-    # Données pour les visiteurs
     active_loans = Transaction.objects.filter(return_date__isnull=True).count()
     waitlist_count = Waitlist.objects.count()
     popular_books = Book.objects.annotate(
@@ -504,7 +497,6 @@ def home_page(request):
         'recent_books': Book.objects.order_by('-id')[:4],
     }
     
-    # Données pour utilisateur connecté
     if request.user.is_authenticated:
         context.update({
             'user_active_loans': Transaction.objects.filter(

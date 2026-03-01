@@ -50,7 +50,6 @@ class WaitlistAdmin(admin.ModelAdmin):
     ordering = ('book', 'created_at')
     
     def position(self, obj):
-        # Calculate position in queue for this book
         position = Waitlist.objects.filter(
             book=obj.book,
             created_at__lt=obj.created_at
