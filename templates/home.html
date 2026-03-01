@@ -4,9 +4,7 @@
 {% block title %}Home | Library{% endblock %}
 
 {% block content %}
-<!-- Hero Section - Design moderne -->
 <div class="relative overflow-hidden mb-16">
-    <!-- Élément décoratif -->
     <div class="absolute inset-0">
         <div class="absolute right-0 top-0 -mr-48 -mt-48 w-96 h-96 bg-blue-50 rounded-full mix-blend-multiply"></div>
         <div class="absolute left-0 bottom-0 -ml-48 -mb-48 w-96 h-96 bg-indigo-50 rounded-full mix-blend-multiply"></div>
@@ -21,7 +19,6 @@
                 Your digital gateway to knowledge and learning
             </p>
             
-            <!-- Quick actions -->
             {% if not user.is_authenticated %}
             <div class="flex justify-center space-x-4 mt-8">
                 <a href="{% url 'register' %}" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition">
@@ -40,10 +37,8 @@
 </div>
 
 
-<!-- Section principale avec ESPACEMENT AMÉLIORÉ -->
 <div class="max-w-6xl mx-auto px-4 mt-16">
     {% if user.is_authenticated %}
-        <!-- Dashboard utilisateur connecté -->
         <div class="mb-16">
             <div class="flex items-center justify-between mb-8">
                 <h2 class="text-3xl font-bold text-gray-800">Your Dashboard</h2>
@@ -229,7 +224,7 @@
             </div>
         </div>
         
-        <!-- Popular Books Preview (pour les visiteurs) -->
+        <!-- Popular Books Preview (for visitors) -->
         <div class="mt-16">
             <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Popular Books This Week</h2>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
