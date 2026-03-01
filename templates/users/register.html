@@ -8,7 +8,7 @@
     
     {% if form.errors %}
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            <strong class="font-bold">Erreurs:</strong>
+            <strong class="font-bold">Errors:</strong>
             <ul class="mt-2 list-disc list-inside">
                 {% for field, errors in form.errors.items %}
                     {% for error in errors %}
@@ -48,10 +48,10 @@
                 <p class="text-red-600 text-sm mt-1">{{ form.password1.errors.0 }}</p>
             {% endif %}
             <ul class="text-gray-500 text-xs mt-1 list-disc list-inside">
-                <li>Votre mot de passe ne peut pas être trop similaire à vos autres informations personnelles.</li>
-                <li>Votre mot de passe doit contenir au moins 8 caractères.</li>
-                <li>Votre mot de passe ne peut pas être un mot de passe couramment utilisé.</li>
-                <li>Votre mot de passe ne peut pas être entièrement numérique.</li>
+                <li>Your password cannot be too similar to your other personal information.</li>
+                <li>Your password must contain at least 8 characters.</li>
+                <li>Your password cannot be a commonly used password.</li>
+                <li>Your password cannot be entirely numeric.</li>
             </ul>
         </div>
         
