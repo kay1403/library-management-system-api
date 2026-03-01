@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from books.views import book_list_page, my_transactions_page, book_detail_page, overdue_books_page, waitlist_page, home_page  # Ajoute home_page ici
+from books.views import book_list_page, my_transactions_page, book_detail_page, overdue_books_page, waitlist_page, home_page
 from users.views import login_page, register_page
 from django.contrib.auth import views as auth_views
 
@@ -23,8 +23,8 @@ urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
     
-    # API
-    path('', include('books.urls')),
+    # API - Maintenant avec un préfixe clair
+    path('api/', include('books.urls')), 
     path('api/users/', include('users.urls')),
     
     # Documentation API
