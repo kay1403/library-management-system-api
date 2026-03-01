@@ -18,6 +18,9 @@ from .serializers import (
     TransactionReturnSerializer, WaitlistSerializer, WaitlistCreateSerializer
 )
 
+from django.db.models import Count, Q
+from users.models import User
+
 User = get_user_model()
 
 
@@ -474,3 +477,48 @@ def waitlist_page(request):
         item.position = position
     
     return render(request, "books/waitlist.html", {"waitlist_items": waitlist_items})
+
+
+def home_page(request):
+    # Statistiques globales
+    total_books = Book.objects.count()
+    total_members = User.objects.filter(is_active_member=True).count()
+    books_borrowed = Transaction.objects.filter(return_date__isnull=True).count()
+    available_books = Book.objects.filter(copies_available__gt=0).count()
+    
+    # Données pour les visiteurs
+    active_loans = Transaction.objects.filter(return_date__isnull=True).count()
+    waitlist_count = Waitlist.objects.count()
+    popular_books = Book.objects.annotate(
+        loan_count=Count('transaction', filter=Q(transaction__return_date__isnull=True))
+    ).order_by('-loan_count')[:4]
+    
+    context = {
+        'total_books': total_books,
+        'total_members': total_members,
+        'books_borrowed': books_borrowed,
+        'available_books': available_books,
+        'active_loans': active_loans,
+        'waitlist_count': waitlist_count,
+        'popular_books': popular_books,
+        'recent_books': Book.objects.order_by('-id')[:4],
+    }
+    
+    # Données pour utilisateur connecté
+    if request.user.is_authenticated:
+        context.update({
+            'user_active_loans': Transaction.objects.filter(
+                user=request.user, 
+                return_date__isnull=True
+            ).count(),
+            'user_overdue_books': Transaction.objects.filter(
+                user=request.user,
+                return_date__isnull=True,
+                due_date__lt=timezone.now()
+            ).count(),
+            'user_waitlist_count': Waitlist.objects.filter(
+                user=request.user
+            ).count(),
+        })
+    
+    return render(request, "home.html", context)

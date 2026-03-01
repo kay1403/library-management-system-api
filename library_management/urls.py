@@ -5,6 +5,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from books.views import book_list_page, my_transactions_page, book_detail_page, overdue_books_page, waitlist_page
 from users.views import login_page, register_page
 from django.contrib.auth import views as auth_views
+from books.views import home_page 
 
 def home_page(request):
     return render(request, "home.html")
