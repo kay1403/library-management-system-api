@@ -27,7 +27,7 @@ DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
 if not ALLOWED_HOSTS or ALLOWED_HOSTS == ['']:
     ALLOWED_HOSTS = ['*']
-    
+
 # Custom user model
 AUTH_USER_MODEL = 'users.User'
 
@@ -169,8 +169,6 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 
 # Logging
-# Dans library_management/settings.py, ajoute à la fin :
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

@@ -344,7 +344,7 @@ def book_detail_page(request, book_id):
     ).first()
     
     user_in_waitlist = user_waitlist_entry is not None
-    user_waitlist_id = user_waitlist_entry.id if user_waitlist_entry else None  # AJOUTE ÇA
+    user_waitlist_id = user_waitlist_entry.id if user_waitlist_entry else None 
     
     waitlist_position = None
     if user_in_waitlist:
