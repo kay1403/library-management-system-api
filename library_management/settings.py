@@ -45,7 +45,7 @@ else:
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
 
-    
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -168,6 +168,8 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 
 # Logging
+# Dans library_management/settings.py, ajoute à la fin :
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -175,9 +177,16 @@ LOGGING = {
         'console': {
             'class': 'logging.StreamHandler',
         },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': '/tmp/django_errors.log',
+        },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
     },
 }
