@@ -31,6 +31,8 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
 AUTH_USER_MODEL = 'users.User'
 
 # Security settings for production
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # ← AJOUTE CETTE LIGNE
+
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
@@ -43,6 +45,7 @@ else:
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
 
+    
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
