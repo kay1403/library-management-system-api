@@ -11,27 +11,27 @@ def home_page(request):
     return render(request, "home.html")
 
 urlpatterns = [
-    # Pages principales
+    # Principal pages
     path('', home_page, name='home_page'),
     path('books/', book_list_page, name='books-list'),
     path('books/<int:book_id>/', book_detail_page, name='book-detail'),
     path('my-transactions/', my_transactions_page, name='my-transactions'),
     path('overdue/', overdue_books_page, name='overdue-books'),
     path('waitlist/', waitlist_page, name='waitlist'),
-    
-    # Authentification
+
+    # Authentication
     path('login/', login_page, name='login'),
     path('register/', register_page, name='register'),
     path('logout/', auth_views.LogoutView.as_view(next_page='/'), name='logout'),
     
     # Admin
     path('admin/', admin.site.urls),
-    
-    # API - Note: on inclut books.urls qui contient toutes les routes API
+
+    # API - Note: we include books.urls that contains all the API routes
     path('', include('books.urls')),
     path('api/users/', include('users.urls')),
-    
-    # Documentation API
+
+    # API Documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]

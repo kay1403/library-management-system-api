@@ -129,7 +129,7 @@
 
 <script>
 function joinWaitlist(bookId) {
-    // Récupérer le token CSRF depuis le cookie
+    // took the CSRF token from the cookie
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-// Fonction pour annuler la liste d'attente
+// Function for cancel the waitlist
 function cancelWaitlist(waitlistId) {
     if (!confirm('Are you sure you want to remove this book from your waitlist?')) {
         return;
