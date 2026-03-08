@@ -11,7 +11,7 @@ def home_page(request):
     return render(request, "home.html")
 
 urlpatterns = [
-    # Pages principales
+    # Principales pages
     path('', home_page, name='home_page'),
     path('books/', book_list_page, name='books-list'),
     path('books/<int:book_id>/', book_detail_page, name='book-detail'),
@@ -26,8 +26,8 @@ urlpatterns = [
     
     # Admin
     path('admin/', admin.site.urls),
-    
-    # API - Note: on inclut books.urls qui contient toutes les routes API
+
+    # API - Note: we include books.urls which contains all API routes
     path('', include('books.urls')),
     path('api/users/', include('users.urls')),
     

@@ -22,9 +22,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 # Security
-SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-votre-clé-de-dev-local")  # Valeur par défaut pour le développement
-DEBUG = True  # Forcer DEBUG à True pour le développement local
-ALLOWED_HOSTS = ["*"]  # Permettre tous les hôtes en local
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-votre-clé-de-dev-local")  
+DEBUG = True  
+ALLOWED_HOSTS = ["*"]  
 
 # Custom user model
 AUTH_USER_MODEL = 'users.User'
@@ -105,19 +105,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'library_management.wsgi.application'
 
-# Configuration de la base de données pour le développement local
+# Configuration of the database for local development
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv("DB_NAME", "library_db"),  # Nom par défaut
-        'USER': os.getenv("DB_USER", "postgres"),  # Utilisateur par défaut
-        'PASSWORD': os.getenv("DB_PASSWORD", "postgres"),  # Mot de passe par défaut
+        'NAME': os.getenv("DB_NAME", "library_db"),
+        'USER': os.getenv("DB_USER", "postgres"), 
+        'PASSWORD': os.getenv("DB_PASSWORD", "postgres"), 
         'HOST': os.getenv("DB_HOST", "localhost"),
         'PORT': os.getenv("DB_PORT", "5432"),
     }
 }
 
-# Alternative avec SQLite pour un développement plus simple (décommentez si vous préférez SQLite)
+# Alternative with SQLite for simpler development (uncomment if you prefer SQLite)
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.sqlite3',
@@ -156,9 +156,9 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Email configuration (pour le développement local)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Affiche les emails dans la console
-# Si vous voulez utiliser un vrai serveur SMTP, décommentez ceci :
+# Email configuration (for local development)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# If you want to use a real SMTP server, uncomment this:
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_HOST = 'smtp.gmail.com'
 # EMAIL_PORT = 587
